@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}CiteGrid — Explore{% endblock %}
+
+{% block content %}
+<div class="container hero-container">
+  <div class="hero-header">
+    <div class="snapshot-stamp">
+      <span class="stamp-label">Status:</span>
+      <span class="stamp-value font-mono">No data imported yet.</span>
+    </div>
+    <h1 class="hero-title">Know which figure you’re citing.</h1>
+    <p class="hero-lead">
+      Compare electricity access across Nigeria, Ghana, and Kenya with immutable data snapshots and visible revision tracking.
+    </p>
+  </div>
+
+  <div class="surface-card empty-card" style="max-width: 680px; margin: var(--space-8) 0;">
+    <h2 class="card-title">Data is not ready yet</h2>
+    <p class="card-desc" style="margin-bottom: var(--space-4);">
+      A complete, validated data import is required before comparisons can be rendered. CiteGrid publishes all nine country–indicator series atomically to ensure no partial observations are exposed.
+    </p>
+    <div class="provenance-note">
+      <div class="prov-title">Standard Evidence Scope</div>
+      <div class="prov-body">
+        <strong>Countries:</strong> Nigeria (NGA), Ghana (GHA), Kenya (KEN)<br>
+        <strong>Indicators:</strong> Total access (EG.ELC.ACCS.ZS), Rural (EG.ELC.ACCS.RU.ZS), Urban (EG.ELC.ACCS.UR.ZS)<br>
+        <strong>Years:</strong> 2000 – present &bull; <strong>Provider:</strong> World Bank WDI (Source 2) &bull; <strong>Licence:</strong> CC BY 4.0
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

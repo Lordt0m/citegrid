@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}CiteGrid — Data is not ready yet{% endblock %}
+
+{% block content %}
+<div class="container hero-container">
+  <div class="hero-header">
+    <div class="snapshot-stamp">
+      <span class="stamp-label">Status</span>
+      <span class="stamp-value font-mono">No complete snapshot yet</span>
+    </div>
+    <h1 class="hero-title">Data is not ready yet.</h1>
+    <p class="hero-lead">
+      A complete provider import is required before comparisons can be viewed or exported.
+    </p>
+    <div style="margin-top: var(--space-6);">
+      <a href="{% url 'core:replay' %}" class="btn btn-secondary">Open Fixture Replay &rarr;</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,379 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}CiteGrid — Revisions Ledger{% endblock %}
+
+{% block content %}
+<div class="container explore-container">
+
+  <!-- Header -->
+  <header class="explore-hero-header">
+    <div class="snapshot-stamp">
+      <span class="stamp-label">Audit Ledger:</span>
+      {% if ctx.latest_snapshot %}
+        <span class="stamp-value font-mono">Latest Snapshot v{{ ctx.latest_snapshot.version }} ({{ ctx.latest_snapshot.content_hash|slice:":8" }})</span>
+        <span class="stamp-date">Retrieved by CiteGrid on {{ ctx.latest_snapshot.retrieved_at|date:"Y-m-d H:i" }} UTC</span>
+      {% else %}
+        <span class="stamp-value font-mono">No data imported yet</span>
+      {% endif %}
+    </div>
+
+    <h1 class="hero-title">A change you can inspect.</h1>
+    <p class="hero-lead">
+      Historical World Bank data may be revised, added, or withdrawn over time. CiteGrid tracks differences between consecutive complete snapshots so your citations remain auditable.
+    </p>
+
+    {% if ctx.is_simulation %}
+      <div class="status-banner status-banner--simulated" role="region" aria-label="Simulation notice" style="margin-top: var(--space-4);">
+        <span class="badge badge-sim">Simulated example</span>
+        <div class="banner-text">
+          {% if ctx.state == 'initial_snapshot' %}This snapshot uses simulated test fixture data for verification. There is no earlier snapshot to compare.{% elif ctx.state == 'no_revisions' %}The latest snapshot uses simulated test fixture data for verification. No numeric changes were recorded between the stored snapshots.{% else %}Some revisions in this view use simulated test fixture data for verification. Those records do not represent live World Bank revisions.{% endif %}
+        </div>
+      </div>
+    {% endif %}
+  </header>
+
+  {% if ctx.state == 'empty' %}
+    <!-- Empty State -->
+    <div class="surface-card empty-card" style="margin: var(--space-8) 0; max-width: 680px;">
+      <h2 class="card-title">Data is not ready yet</h2>
+      <p class="card-desc" style="margin-bottom: var(--space-4);">
+        A complete, validated data import is required before revisions can be tracked. CiteGrid compares adjacent complete snapshots to identify newly supplied, changed, or withdrawn values.
+      </p>
+      <div class="provenance-note">
+        <div class="prov-title">Standard Evidence Scope</div>
+        <div class="prov-body">
+          <strong>Countries:</strong> Nigeria (NGA), Ghana (GHA), Kenya (KEN)<br>
+          <strong>Indicators:</strong> Total, Rural, Urban electricity access &bull; <strong>Licence:</strong> CC BY 4.0
+        </div>
+      </div>
+    </div>
+
+  {% elif ctx.state == 'initial_snapshot' %}
+    <!-- Initial Snapshot State -->
+    <div class="surface-card empty-card" style="margin: var(--space-8) 0; max-width: 680px;">
+      <div class="status-badge-row" style="margin-bottom: var(--space-3);">
+        <span class="badge badge-neutral">Snapshot v{{ ctx.latest_snapshot.version }}</span>
+      </div>
+      <h2 class="card-title">Initial Complete Published Snapshot</h2>
+      <p class="card-desc" style="margin-bottom: var(--space-4);">
+        Snapshot v{{ ctx.latest_snapshot.version }} ({{ ctx.latest_snapshot.content_hash|slice:":8" }}) is the initial complete published snapshot in the ledger. There is no earlier snapshot to compare.
+      </p>
+      <p class="card-desc" style="font-size: var(--text-sm); color: var(--color-ink-muted);">
+        When a subsequent complete import is published with revised figures, transitions between Snapshot v1 and Snapshot v2 will be logged and inspectable here.
+      </p>
+      <div style="margin-top: var(--space-6);">
+        <a href="{% url 'core:index' %}" class="btn btn-primary">Open Explore Studio &rarr;</a>
+      </div>
+    </div>
+
+  {% elif ctx.state == 'no_revisions' %}
+    <!-- Multiple Snapshots, No Revisions -->
+    <div class="surface-card empty-card" style="margin: var(--space-8) 0; max-width: 680px;">
+      <div class="status-badge-row" style="margin-bottom: var(--space-3);">
+        <span class="badge badge-neutral">{{ ctx.snapshots_count }} snapshots published</span>
+      </div>
+      <h2 class="card-title">No Revisions Found</h2>
+      <p class="card-desc" style="margin-bottom: var(--space-4);">
+        No changes found between the complete snapshots stored so far. All observation values across Nigeria, Ghana, and Kenya remained identical between consecutive complete releases.
+      </p>
+      <div style="margin-top: var(--space-6);">
+        <a href="{% url 'core:index' %}" class="btn btn-primary">Open Explore Studio &rarr;</a>
+      </div>
+    </div>
+
+  {% else %}
+    <!-- Active Revisions View -->
+
+    <!-- Scope & Filter Toolbar -->
+    <div class="surface-card revisions-toolbar-card" style="margin-bottom: var(--space-6); padding: var(--space-4) var(--space-6);">
+      <div class="toolbar-header" style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: var(--space-3);">
+        <div>
+          <h2 style="font-size: var(--text-base); font-weight: 600; margin: 0;">
+            {{ ctx.scope_header }}
+          </h2>
+          <span style="font-size: var(--text-xs); color: var(--color-ink-muted);">
+            Showing {{ ctx.filtered_revisions_count }} of {{ ctx.total_revisions_count }} recorded revision{{ ctx.total_revisions_count|pluralize }}.
+          </span>
+        </div>
+
+        {% if ctx.selected_country or ctx.selected_transition or ctx.selected_snapshot_version or ctx.selected_since_version %}
+          <div>
+            <a href="{% url 'core:revisions_list' %}" class="btn-clear-filters" style="font-size: var(--text-xs); color: var(--color-ink); text-decoration: underline;">
+              Clear all filters
+            </a>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Filters Form (Zero-JS GET) -->
+      <form method="get" action="{% url 'core:revisions_list' %}" class="revisions-filter-form" style="display: flex; flex-wrap: wrap; gap: var(--space-4); margin-top: var(--space-4); align-items: flex-end;">
+        {% if query_params.snapshot %}
+          <input type="hidden" name="snapshot" value="{{ query_params.snapshot }}">
+        {% endif %}
+        {% if query_params.since %}
+          <input type="hidden" name="since" value="{{ query_params.since }}">
+        {% endif %}
+
+        <div class="filter-group">
+          <label for="id_country" style="display: block; font-size: var(--text-xs); font-weight: 600; margin-bottom: var(--space-1);">Country</label>
+          <select id="id_country" name="country" class="filter-select">
+            <option value="">All economies</option>
+            <option value="NGA" {% if ctx.selected_country == 'NGA' %}selected{% endif %}>Nigeria (NGA)</option>
+            <option value="GHA" {% if ctx.selected_country == 'GHA' %}selected{% endif %}>Ghana (GHA)</option>
+            <option value="KEN" {% if ctx.selected_country == 'KEN' %}selected{% endif %}>Kenya (KEN)</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="id_transition" style="display: block; font-size: var(--text-xs); font-weight: 600; margin-bottom: var(--space-1);">Change Type</label>
+          <select id="id_transition" name="transition" class="filter-select">
+            <option value="">All transition types</option>
+            <option value="CHANGED" {% if ctx.selected_transition == 'CHANGED' %}selected{% endif %}>Changed value</option>
+            <option value="NEW_VALUE" {% if ctx.selected_transition == 'NEW_VALUE' %}selected{% endif %}>New value supplied</option>
+            <option value="WITHDRAWN" {% if ctx.selected_transition == 'WITHDRAWN' %}selected{% endif %}>Withdrawn to missing</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: var(--text-xs);">
+          Filter
+        </button>
+      </form>
+    </div>
+
+    <!-- In-Page Inspection Panel (if a revision is selected) -->
+    {% if ctx.inspection %}
+      <section id="inspection-drawer" class="surface-card inspection-card" style="margin-bottom: var(--space-6); border: 2px solid var(--color-ink);" aria-labelledby="inspection-heading">
+        <div class="inspection-header" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-4);">
+          <div>
+            <div class="badge-row" style="margin-bottom: var(--space-1);">
+              {% if ctx.inspection.revision.transition_type == 'CHANGED' %}
+                <span class="badge badge-changed">Changed</span>
+              {% elif ctx.inspection.revision.transition_type == 'NEW_VALUE' %}
+                <span class="badge badge-new">New value</span>
+              {% elif ctx.inspection.revision.transition_type == 'WITHDRAWN' %}
+                <span class="badge badge-withdrawn">Withdrawn</span>
+              {% endif %}
+              <span class="badge badge-neutral font-mono">{{ ctx.inspection.delta_str }}</span>
+              {% if ctx.inspection.is_simulation %}
+                <span class="badge badge-sim">Simulated example</span>
+              {% endif %}
+            </div>
+            <h3 id="inspection-heading" style="font-size: var(--text-lg); font-weight: 700; margin: 0;">
+              {{ ctx.inspection.revision.country_name }} &bull; {{ ctx.inspection.revision.indicator_name }}
+            </h3>
+            <div style="font-size: var(--text-sm); color: var(--color-ink-muted); margin-top: var(--space-1);">
+              <strong>Observation year:</strong> <span class="font-mono" style="font-weight: 700; color: var(--color-ink);">{{ ctx.inspection.revision.observation_year }}</span> &bull;
+              Observed by CiteGrid on {{ ctx.inspection.revision.current_retrieved_at|date:"Y-m-d H:i" }} UTC
+            </div>
+          </div>
+
+          <div>
+            <a href="{% url 'core:revisions_list' %}{% if query_params.country %}?country={{ query_params.country }}{% endif %}" class="btn btn-secondary" style="font-size: var(--text-xs); padding: 0.3rem 0.6rem;">
+              &times; Close inspection
+            </a>
+          </div>
+        </div>
+
+        <!-- Before / After Side-by-Side Cards -->
+        <div class="diff-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-4);">
+          <!-- Earlier Snapshot Card -->
+          <div class="diff-card diff-card--old" style="padding: var(--space-4); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-sm);">
+            <div style="font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-ink-muted); margin-bottom: var(--space-1);">
+              Earlier Snapshot: v{{ ctx.inspection.revision.previous_snapshot.version }} ({{ ctx.inspection.revision.previous_snapshot.content_hash|slice:":8" }})
+            </div>
+            <div style="font-size: var(--text-2xl); font-weight: 700; font-family: var(--font-mono); margin-bottom: var(--space-2);">
+              {% if ctx.inspection.revision.old_value is not None %}
+                {{ ctx.inspection.revision.old_value|floatformat:2 }}%
+              {% else %}
+                <span class="val-missing">No data</span>
+              {% endif %}
+            </div>
+            <div style="font-size: var(--text-xs); color: var(--color-ink-muted);">
+              <div><strong>Retrieved:</strong> {{ ctx.inspection.revision.previous_retrieved_at|date:"Y-m-d H:i" }} UTC</div>
+              {% if ctx.inspection.revision.old_raw_value_str %}
+                <div><strong>Raw value:</strong> <code class="font-mono">{{ ctx.inspection.revision.old_raw_value_str }}</code></div>
+              {% endif %}
+              {% if ctx.inspection.revision.old_footnote %}
+                <div><strong>Footnote:</strong> {{ ctx.inspection.revision.old_footnote }}</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Later Snapshot Card -->
+          <div class="diff-card diff-card--new" style="padding: var(--space-4); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-sm);">
+            <div style="font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-ink-muted); margin-bottom: var(--space-1);">
+              Later Snapshot: v{{ ctx.inspection.revision.current_snapshot.version }} ({{ ctx.inspection.revision.current_snapshot.content_hash|slice:":8" }})
+            </div>
+            <div style="font-size: var(--text-2xl); font-weight: 700; font-family: var(--font-mono); margin-bottom: var(--space-2);">
+              {% if ctx.inspection.revision.new_value is not None %}
+                {{ ctx.inspection.revision.new_value|floatformat:2 }}%
+              {% else %}
+                <span class="val-missing">No data</span>
+              {% endif %}
+            </div>
+            <div style="font-size: var(--text-xs); color: var(--color-ink-muted);">
+              <div><strong>Retrieved:</strong> {{ ctx.inspection.revision.current_retrieved_at|date:"Y-m-d H:i" }} UTC</div>
+              {% if ctx.inspection.revision.new_raw_value_str %}
+                <div><strong>Raw value:</strong> <code class="font-mono">{{ ctx.inspection.revision.new_raw_value_str }}</code></div>
+              {% endif %}
+              {% if ctx.inspection.revision.new_footnote %}
+                <div><strong>Footnote:</strong> {{ ctx.inspection.revision.new_footnote }}</div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Objective Explanation -->
+        <div class="inspection-explanation" style="padding: var(--space-3) var(--space-4); background: #f4f3ef; border-radius: var(--radius-sm); margin-bottom: var(--space-4); font-size: var(--text-sm); line-height: 1.5;">
+          {{ ctx.inspection.explanation }}
+        </div>
+
+        <!-- Contextual Neighbours Table -->
+        <div class="neighbour-section" style="margin-bottom: var(--space-4);">
+          <h4 style="font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-ink-muted); margin-bottom: var(--space-2);">
+            Context: Neighbouring Observation Years in Both Snapshots
+          </h4>
+          <table class="data-table neighbour-table" style="width: 100%; border-collapse: collapse; font-size: var(--text-xs);">
+            <thead>
+              <tr style="border-bottom: 1px solid var(--color-border);">
+                <th scope="col" style="padding: 0.4rem; text-align: left;">Observation Year</th>
+                <th scope="col" style="padding: 0.4rem; text-align: right;">Snapshot v{{ ctx.inspection.revision.previous_snapshot.version }}</th>
+                <th scope="col" style="padding: 0.4rem; text-align: right;">Snapshot v{{ ctx.inspection.revision.current_snapshot.version }}</th>
+                <th scope="col" style="padding: 0.4rem; text-align: right;">Change</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for nr in ctx.inspection.neighbour_rows %}
+                <tr style="border-bottom: 1px solid var(--color-border); {% if nr.is_target_year %}background: rgba(0,0,0,0.03); font-weight: 700;{% endif %}">
+                  <td style="padding: 0.4rem;">
+                    <span class="font-mono">{{ nr.year }}</span>
+                    {% if nr.is_target_year %}<span class="badge badge-neutral" style="font-size: 10px; margin-left: 0.25rem;">Revised</span>{% endif %}
+                  </td>
+                  <td style="padding: 0.4rem; text-align: right;" class="font-mono">
+                    {% if nr.old_value is not None %}{{ nr.old_value|floatformat:2 }}%{% else %}<span class="val-missing">No data</span>{% endif %}
+                  </td>
+                  <td style="padding: 0.4rem; text-align: right;" class="font-mono">
+                    {% if nr.new_value is not None %}{{ nr.new_value|floatformat:2 }}%{% else %}<span class="val-missing">No data</span>{% endif %}
+                  </td>
+                  <td style="padding: 0.4rem; text-align: right;" class="font-mono">
+                    {% if nr.old_value is not None and nr.new_value is not None %}
+                      {% if nr.old_value == nr.new_value %}
+                        <span style="color: var(--color-ink-muted);">0.00</span>
+                      {% else %}
+                        <strong>{{ nr.new_value|floatformat:2 }}</strong>
+                      {% endif %}
+                    {% elif nr.old_value is None and nr.new_value is not None %}
+                      <span style="color: #2e7d32;">+New</span>
+                    {% elif nr.old_value is not None and nr.new_value is None %}
+                      <span style="color: #c62828;">-Withdrawn</span>
+                    {% else %}
+                      <span style="color: var(--color-ink-muted);">&mdash;</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Paired Provenance Metadata -->
+        <div class="provenance-note" style="font-size: var(--text-xs);">
+          <div class="prov-title">Authoritative Stored Provenance</div>
+          <div class="prov-body">
+            <strong>Indicator:</strong> {{ ctx.inspection.revision.indicator_name }} (<span class="font-mono">{{ ctx.inspection.revision.indicator_code }}</span>)<br>
+            <strong>Definition:</strong> {{ ctx.inspection.revision.new_indicator_definition|default:ctx.inspection.revision.old_indicator_definition }}<br>
+            <strong>Provider:</strong> {{ ctx.inspection.revision.new_provider_label|default:ctx.inspection.revision.old_provider_label }} &bull;
+            <strong>Underlying source:</strong> {{ ctx.inspection.revision.new_underlying_source|default:ctx.inspection.revision.old_underlying_source }} &bull;
+            <strong>Licence:</strong> {{ ctx.inspection.revision.new_license|default:ctx.inspection.revision.old_license }}<br>
+            <strong>Source URL:</strong> <a href="{{ ctx.inspection.revision.new_source_url|default:ctx.inspection.revision.old_source_url }}" target="_blank" rel="noopener noreferrer">{{ ctx.inspection.revision.new_source_url|default:ctx.inspection.revision.old_source_url }}</a>
+          </div>
+        </div>
+
+        <div style="margin-top: var(--space-4); display: flex; justify-content: flex-end;">
+          <a href="{% url 'core:revision_detail' pk=ctx.inspection.revision.pk %}" class="btn btn-secondary" style="font-size: var(--text-xs);" target="_blank" rel="noopener">
+            Open Standalone Deep Link &rarr;
+          </a>
+        </div>
+      </section>
+    {% endif %}
+
+    <!-- Revisions Data Table -->
+    <div class="surface-card revisions-table-wrap" style="padding: 0;">
+      <table class="data-table revisions-table" style="width: 100%; border-collapse: collapse; text-align: left;">
+        <thead>
+          <tr style="border-bottom: 2px solid var(--color-border); background: #faf9f6;">
+            <th scope="col" style="padding: var(--space-3) var(--space-4);">Economy</th>
+            <th scope="col" style="padding: var(--space-3) var(--space-4);">Indicator</th>
+            <th scope="col" style="padding: var(--space-3) var(--space-4);">Observation Year</th>
+            <th scope="col" style="padding: var(--space-3) var(--space-4);">Transition</th>
+            <th scope="col" style="padding: var(--space-3) var(--space-4); text-align: right;">Previous Value</th>
+            <th scope="col" style="padding: var(--space-3) var(--space-4); text-align: right;">Current Value</th>
+            <th scope="col" style="padding: var(--space-3) var(--space-4);">Observed by CiteGrid</th>
+            <th scope="col" style="padding: var(--space-3) var(--space-4); text-align: right;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for rev in ctx.revisions %}
+            <tr style="border-bottom: 1px solid var(--color-border); {% if ctx.inspection and ctx.inspection.revision.pk == rev.pk %}background: rgba(0,0,0,0.04);{% endif %}">
+              <td data-label="Economy" style="padding: var(--space-3) var(--space-4); font-weight: 600;">
+                {{ rev.country_name }} <span class="font-mono" style="font-size: var(--text-xs); color: var(--color-ink-muted);">({{ rev.country_code }})</span>
+              </td>
+              <td data-label="Indicator" style="padding: var(--space-3) var(--space-4); font-size: var(--text-sm);">
+                {{ rev.indicator_name }}
+              </td>
+              <td data-label="Observation Year" style="padding: var(--space-3) var(--space-4);">
+                <span class="badge badge-obs-year font-mono">{{ rev.observation_year }}</span>
+              </td>
+              <td data-label="Transition" style="padding: var(--space-3) var(--space-4);">
+                {% if rev.transition_type == 'CHANGED' %}
+                  <span class="badge badge-changed">Changed</span>
+                {% elif rev.transition_type == 'NEW_VALUE' %}
+                  <span class="badge badge-new">New value</span>
+                {% elif rev.transition_type == 'WITHDRAWN' %}
+                  <span class="badge badge-withdrawn">Withdrawn</span>
+                {% endif %}
+                {% if rev.is_simulation_display %}<span class="badge badge-sim">Simulated example</span>{% endif %}
+              </td>
+              <td data-label="Previous Value" style="padding: var(--space-3) var(--space-4); text-align: right; font-family: var(--font-mono);">
+                {% if rev.old_value is not None %}
+                  {{ rev.old_value|floatformat:2 }}%
+                {% else %}
+                  <span class="val-missing">No data</span>
+                {% endif %}
+              </td>
+              <td data-label="Current Value" style="padding: var(--space-3) var(--space-4); text-align: right; font-family: var(--font-mono); font-weight: 600;">
+                {% if rev.new_value is not None %}
+                  {{ rev.new_value|floatformat:2 }}%
+                {% else %}
+                  <span class="val-missing">No data</span>
+                {% endif %}
+              </td>
+              <td data-label="Observed" style="padding: var(--space-3) var(--space-4); font-size: var(--text-xs); color: var(--color-ink-muted);">
+                {{ rev.current_retrieved_at|date:"Y-m-d H:i" }} UTC
+              </td>
+              <td data-label="Action" style="padding: var(--space-3) var(--space-4); text-align: right;">
+                <a href="?{% if query_params.country %}country={{ query_params.country }}&{% endif %}{% if query_params.transition %}transition={{ query_params.transition }}&{% endif %}{% if query_params.snapshot %}snapshot={{ query_params.snapshot }}&{% endif %}{% if query_params.since %}since={{ query_params.since }}&{% endif %}inspect={{ rev.pk }}" class="btn-inspect">
+                  Inspect &rarr;
+                </a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="8" style="padding: var(--space-6); text-align: center; color: var(--color-ink-muted);">
+                No revisions match the selected filters.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/revisions.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,76 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}CiteGrid — Evidence Ledger{% endblock %}</title>
+  <meta name="description" content="CiteGrid: A reproducible evidence ledger comparing electricity access across Nigeria, Ghana, and Kenya with immutable data snapshots and revision tracking.">
+  
+  <!-- Web Fonts with system fallbacks -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="{% static 'css/citegrid.css' %}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="site-body">
+  <header class="site-header" role="banner">
+    <div class="header-inner container">
+      <div class="brand">
+        <a href="{% url 'core:index' %}" class="brand-link" aria-label="CiteGrid Home">
+          <span class="brand-mark">CiteGrid</span>
+        </a>
+      </div>
+      <nav class="site-nav" role="navigation" aria-label="Main Navigation">
+        <ul class="nav-list">
+          <li class="nav-item"><a href="{% url 'core:index' %}" class="nav-link {% if active_nav == 'explore' %}active{% endif %}">Explore</a></li>
+          <li class="nav-item"><a href="{% url 'core:revisions_list' %}" class="nav-link {% if active_nav == 'revisions' %}active{% endif %}">Revisions</a></li>
+          <li class="nav-item"><a href="{% url 'core:about' %}" class="nav-link {% if active_nav == 'about' %}active{% endif %}">About the data</a></li>
+          <li class="nav-item"><a href="{% url 'core:public_example' %}" class="nav-link {% if active_nav == 'briefing' %}active{% endif %}">Example briefing</a></li>
+          <li class="nav-item"><a href="{% url 'core:replay' %}" class="nav-link {% if active_nav == 'replay' %}active{% endif %}">Fixture replay <span class="badge badge-sim nav-sim-badge">Simulated</span></a></li>
+        </ul>
+      </nav>
+      <details class="mobile-navigation">
+        <summary class="menu-toggle">Menu <span class="menu-toggle-icon" aria-hidden="true"></span></summary>
+        <nav class="mobile-nav-panel" aria-label="Mobile navigation">
+          <a href="{% url 'core:index' %}" class="mobile-nav-link {% if active_nav == 'explore' %}active{% endif %}" {% if active_nav == 'explore' %}aria-current="page"{% endif %}>Explore</a>
+          <a href="{% url 'core:revisions_list' %}" class="mobile-nav-link {% if active_nav == 'revisions' %}active{% endif %}" {% if active_nav == 'revisions' %}aria-current="page"{% endif %}>Revisions</a>
+          <a href="{% url 'core:about' %}" class="mobile-nav-link {% if active_nav == 'about' %}active{% endif %}" {% if active_nav == 'about' %}aria-current="page"{% endif %}>About the data</a>
+          <a href="{% url 'core:public_example' %}" class="mobile-nav-link {% if active_nav == 'briefing' %}active{% endif %}" {% if active_nav == 'briefing' %}aria-current="page"{% endif %}>Example briefing</a>
+          <a href="{% url 'core:replay' %}" class="mobile-nav-link {% if active_nav == 'replay' %}active{% endif %}" {% if active_nav == 'replay' %}aria-current="page"{% endif %}>Fixture replay <span class="badge badge-sim nav-sim-badge">Simulated</span></a>
+        </nav>
+      </details>
+    </div>
+  </header>
+
+  <main id="main-content" class="site-main" role="main">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer" role="contentinfo">
+    <div class="footer-inner container">
+      <div class="footer-provenance">
+        <p class="source-credit">
+          {% if provenance %}
+            <strong>Data Provider:</strong> {{ provenance.provider_label }} &bull;
+            <strong>Underlying source:</strong> {{ provenance.underlying_source }} &bull;
+            <strong>Licence:</strong> {{ provenance.license }}
+            {% if provenance.version %}&bull; <strong>Snapshot:</strong> v{{ provenance.version }} ({{ provenance.content_hash|slice:":8" }}){% endif %}
+          {% else %}
+            <strong>Data Provider:</strong> World Bank World Development Indicators &bull;
+            <strong>Attribution:</strong> Stored per immutable snapshot &bull;
+            <strong>Licence:</strong> Provider open terms
+          {% endif %}
+        </p>
+        <p class="footer-disclaimer">
+          CiteGrid is a reproducible evidence ledger for development data citations.
+          Missing values remain explicit. Published snapshots are immutable.
+        </p>
+      </div>
+    </div>
+  </footer>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

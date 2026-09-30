@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}CiteGrid — {{ grid.comparison.title }}{% endblock %}
+
+{% block content %}
+<div class="container hero-container">
+  <div class="hero-header">
+    <div class="snapshot-stamp">
+      <span class="stamp-label">Pinned Snapshot</span>
+      <span class="stamp-value font-mono">v{{ grid.snapshot.version }} ({{ grid.snapshot.content_hash|slice:":8" }})</span>
+      {% if snapshot_is_simulation %}<span class="badge badge-sim">Simulated example</span>{% endif %}
+      <span class="stamp-date">&bull; Retrieved by CiteGrid on {{ grid.retrieved_at|date:"Y-m-d H:i" }} UTC</span>
+    </div>
+    <h1 class="hero-title">{{ grid.comparison.title }}</h1>
+    <p class="hero-lead">
+      Pinned comparison across {{ grid.countries|length }} economies ({{ grid.comparison.start_year }}–{{ grid.comparison.end_year }}).
+    </p>
+
+    {% if has_newer_snapshot %}
+      <div class="status-banner status-banner--newer-snapshot" role="region" aria-label="Newer snapshot notice" style="margin-top: var(--space-4);">
+        <span class="status-indicator-dot status-indicator-dot--alert"></span>
+        <div class="banner-text">
+          <strong>A newer snapshot is available.</strong>
+          This briefing remains pinned to Snapshot v{{ grid.snapshot.version }} ({{ grid.snapshot.content_hash|slice:":8" }}), retrieved by CiteGrid on {{ grid.retrieved_at|date:"Y-m-d H:i" }} UTC.
+          A newer complete snapshot (Snapshot v{{ latest_snapshot.version }}) was published on {{ latest_snapshot.published_at|date:"Y-m-d" }} UTC.
+          <div class="banner-actions" style="margin-top: 0.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+            <a href="{% url 'core:revisions_list' %}?since={{ grid.snapshot.version }}" class="banner-link">Review changes since this version &rarr;</a>
+            <a href="{% url 'core:index' %}?indicator={{ grid.comparison.indicator_code }}" class="banner-link">Open latest in Explore &rarr;</a>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="action-bar" style="margin-top: 1.5rem;">
+      <a href="{% url 'core:comparison_export' pk=grid.comparison.pk %}" class="btn btn-primary" download>
+        Download Pinned Package (CSV + source.txt)
+      </a>
+    </div>
+  </div>
+
+  <!-- Indicator and Provenance Card -->
+  <section class="overview-grid briefing-overview" aria-labelledby="indicator-heading" style="margin-top: 2rem;">
+    <div class="overview-card surface-card" style="grid-column: 1 / -1;">
+      <h2 id="indicator-heading" class="card-title">{{ display_indicator_name }}</h2>
+      <p class="card-desc">{{ grid.indicator_definition }}</p>
+
+      <div class="provenance-meta" style="margin-top: 1rem; font-size: 0.9rem;">
+        <p><strong>Indicator Code:</strong> <span class="font-mono">{{ grid.indicator_code }}</span> &bull; <strong>Unit:</strong> {{ grid.unit }}</p>
+        <p><strong>Provider:</strong> {{ grid.provider_label }} &bull; <strong>Source:</strong> <a href="{{ grid.source_url }}" target="_blank" rel="noopener noreferrer">{{ grid.source_url }}</a></p>
+        <p><strong>Underlying Dataset:</strong> {{ grid.underlying_source }} &bull; <strong>Licence:</strong> {{ grid.license }}</p>
+      </div>
+
+      <div class="latest-years-bar" style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border-color, #e0deda);">
+        <h3 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted, #666);">
+          Latest Available Year across Entire Snapshot
+        </h3>
+        <div style="display: flex; gap: 1.5rem; margin-top: 0.5rem; flex-wrap: wrap;">
+          {% for ly in latest_years %}
+          <div>
+            <strong>{{ ly.country_name }} ({{ ly.country_code }}):</strong>
+            <span class="font-mono">
+              {% if ly.latest_year %}{{ ly.latest_year }}{% else %}No data{% endif %}
+            </span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Comparison Data Table -->
+  <section class="surface-card briefing-table-section" style="margin-top: 2rem;" aria-labelledby="table-heading">
+    <h2 id="table-heading" class="card-title" style="margin-bottom: 1rem;">Comparison Observations</h2>
+    
+    <table class="data-table briefing-table" style="width: 100%; border-collapse: collapse; text-align: left;">
+      <thead>
+        <tr style="border-bottom: 2px solid var(--border-color, #ccc);">
+          <th style="padding: 0.75rem 1rem;">Observation Year</th>
+          {% for col in columns %}
+          <th style="padding: 0.75rem 1rem;">{{ col }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in table_rows %}
+        <tr style="border-bottom: 1px solid var(--border-light, #eee);">
+          <th scope="row" class="font-mono" style="padding: 0.6rem 1rem;">{{ row.year }}</th>
+          {% for cell in row.cells %}
+          <td data-label="{{ cell.label }}" style="padding: 0.6rem 1rem;">
+            {% if cell.value is not None %}
+              <span class="font-mono">{{ cell.value }}%</span>
+            {% else %}
+              <span class="badge badge-missing" style="color: #888;">No data</span>
+            {% endif %}
+          </td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div style="margin-top: 1.5rem; padding: 1rem; background: var(--bg-muted, #f8f7f4); border-radius: 4px; font-size: 0.85rem; color: #555;">
+      <strong>Missing-Value Policy:</strong> Missing values are recorded as 'No data'. This indicates that no numeric value is available in this pinned snapshot (whether the provider returned an explicit null observation or the observation was absent from the dataset). It does not represent zero electricity access.
+    </div>
+  </section>
+</div>
+{% endblock %}

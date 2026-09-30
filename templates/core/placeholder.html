@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}CiteGrid — Know which figure you’re citing{% endblock %}
+
+{% block content %}
+<div class="container hero-container">
+  <div class="hero-header">
+    <div class="snapshot-stamp">
+      <span class="stamp-label">Data State</span>
+      <span class="stamp-value font-mono">{{ snapshot_state }}</span>
+    </div>
+    <h1 class="hero-title">{{ headline }}</h1>
+    <p class="hero-lead">{{ tagline }}</p>
+  </div>
+
+  <section class="overview-grid" aria-labelledby="scope-heading">
+    <div class="overview-card surface-card">
+      <h2 id="scope-heading" class="card-title">Fixed Evidence Scope</h2>
+      <p class="card-desc">
+        CiteGrid tracks electricity access indicators across three West & East African economies from 2000 to the present, maintaining an immutable audit trail of World Bank revisions.
+      </p>
+
+      <div class="scope-columns">
+        <div class="scope-col">
+          <h3 class="col-heading">Economies (3)</h3>
+          <ul class="scope-list">
+            {% for country in countries %}
+            <li class="scope-item">
+              <span class="badge font-mono">{{ country.code }}</span>
+              <span class="item-name">{{ country.name }}</span>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+
+        <div class="scope-col">
+          <h3 class="col-heading">Indicators (3)</h3>
+          <ul class="scope-list">
+            {% for indicator in indicators %}
+            <li class="scope-item">
+              <span class="badge font-mono badge-indicator">{{ indicator.kind }}</span>
+              <span class="item-name" title="{{ indicator.code }}">{{ indicator.name }}</span>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="status-card surface-card">
+      <h2 class="card-title">Data Status</h2>
+      <div class="status-banner">
+        <div class="status-indicator-dot" aria-hidden="true"></div>
+        <div class="status-text">
+          <strong>Data status:</strong> {{ status_message }}
+        </div>
+      </div>
+
+      <div class="milestone-roadmap">
+        <h3 class="roadmap-heading">Implementation Invariants</h3>
+        <ol class="roadmap-list">
+          <li class="roadmap-step done">
+            <span class="step-num font-mono">01</span>
+            <span class="step-name">Runnable Repository &amp; Baseline</span>
+          </li>
+          <li class="roadmap-step done">
+            <span class="step-num font-mono">02</span>
+            <span class="step-name">World Bank Adapter &amp; Fixture Corpus</span>
+          </li>
+          <li class="roadmap-step {% if latest_snapshot %}done{% else %}next{% endif %}">
+            <span class="step-num font-mono">03</span>
+            <span class="step-name">Transactional Import &amp; Immutable Snapshot</span>
+          </li>
+          <li class="roadmap-step {% if latest_snapshot %}next{% endif %}">
+            <span class="step-num font-mono">04</span>
+            <span class="step-name">Snapshot Diffing &amp; Revision Ledger</span>
+          </li>
+          <li class="roadmap-step">
+            <span class="step-num font-mono">05</span>
+            <span class="step-name">Pinned Comparison &amp; Attributed Export</span>
+          </li>
+        </ol>
+      </div>
+
+      <div class="provenance-note">
+        <h4 class="prov-title">Auditability Principle</h4>
+        <p class="prov-body">
+          No data imported yet. Once a complete import runs, missing data values are preserved as explicit nulls. Gaps never render as zeros, and saved comparisons remain pinned to exact immutable snapshots.
+        </p>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}

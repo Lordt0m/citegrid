@@ -1,0 +1,454 @@
+[
+  {
+    "page": 1,
+    "pages": 1,
+    "per_page": 50,
+    "total": 26,
+    "sourceid": "2",
+    "lastupdated": "2026-07-13"
+  },
+  [
+    {
+      "indicator": {
+        "id": "EG.ELC.ACCS.ZS",
+        "value": "Access to electricity (% of population)"
+      },
+      "country": {
+        "id": "NG",
+        "value": "Nigeria"
+      },
+      "countryiso3code": "NGA",
+      "date": "2024",
+      "value": 62.5,
+      "unit": "",
+      "obs_status": "",
+      "decimal": 1,
+      "footnote": ""
+    },
+    {
+      "indicator": {
+        "id": "EG.ELC.ACCS.ZS",
+        "value": "Access to electricity (% of population)"
+      },
+      "country": {
+        "id": "NG",
+        "value": "Nigeria"
+      },
+      "countryiso3code": "NGA",
+      "date": "2023",
+      "value": 61.2,
+      "unit": "",
+      "obs_status": "",
+      "decimal": 1,
+      "footnote": ""
+    },
+    {
+      "indicator": {
+        "id": "EG.ELC.ACCS.ZS",
+        "value": "Access to electricity (% of population)"
+      },
+      "country": {
+        "id": "NG",
+        "value": "Nigeria"
+      },
+      "countryiso3code": "NGA",
+      "date": "2022",
+      "value": 60.5,
+      "unit": "",
+      "obs_status": "",
+      "decimal": 1,
+      "footnote": ""
+    },
+    {
+      "indicator": {
+        "id": "EG.ELC.ACCS.ZS",
+        "value": "Access to electricity (% of population)"
+      },
+      "country": {
+        "id": "NG",
+        "value": "Nigeria"
+      },
+      "countryiso3code": "NGA",
+      "date": "2021",
+      "value": 59.5,
+      "unit": "",
+      "obs_status": "",
+      "decimal": 1,
+      "footnote": ""
+    },
+    {
+      "indicator": {
+        "id": "EG.ELC.ACCS.ZS",
+        "value": "Access to electricity (% of population)"
+      },
+      "country": {
+        "id": "NG",
+        "value": "Nigeria"
+      },
+      "countryiso3code": "NGA",
+      "date": "2020",
+      "value": 55.4,
+      "unit": "",
+      "obs_status": "",
+      "decimal": 1,
+      "footnote": ""
+    },
+    {
+      "indicator": {
+        "id": "EG.ELC.ACCS.ZS",
+        "value": "Access to electricity (% of population)"
+      },
+      "country": {
+        "id": "NG",
+        "value": "Nigeria"
+      },
+      "countryiso3code": "NGA",
+      "date": "2019",
+      "value": 55.4,
+      "unit": "",
+      "obs_status": "",
+      "decimal": 1,
+      "footnote": ""
+    },
+    {
+      "indicator": {
+        "id": "EG.ELC.ACCS.ZS",
+        "value": "Access to electricity (% of population)"
+      },
+      "country": {
+        "id": "NG",
+        "value": "Nigeria"
+      },
+      "countryiso3code": "NGA",
+      "date": "2018",
+      "value": 56.5,
+      "unit": "",
+      "obs_status": "",
+      "decimal": 1,
+      "footnote": ""
+    },
+    {
+      "indicator": {
+        "id": "EG.ELC.ACCS.ZS",
+        "value": "Access to electricity (% of population)"
+      },
+      "country": {
+        "id": "NG",
+        "value": "Nigeria"
+      },
+      "countryiso3code": "NGA",
+      "date": "2017",
+      "value": 54.4,
+      "unit": "",
+      "obs_status": "",
+      "decimal": 1,
+      "footnote": ""
+    },
+    {
+      "indicator": {
+        "id": "EG.ELC.ACCS.ZS",
+        "value": "Access to electricity (% of population)"
+      },
+      "country": {
+        "id": "NG",
+        "value": "Nigeria"
+      },
+      "countryiso3code": "NGA",
+      "date": "2016",
+      "value": 59.3,
+      "unit": "",
+      "obs_status": "",
+      "decimal": 1,
+      "footnote": ""
+    },
+    {
+      "indicator": {
+        "id": "EG.ELC.ACCS.ZS",
+        "value": "Access to electricity (% of population)"
+      },
+      "country": {
+        "id": "NG",
+        "value": "Nigeria"
+      },
+      "countryiso3code": "NGA",
+      "date": "2015",
+      "value": 52.5,
+      "unit": "",
+      "obs_status": "",
+      "decimal": 1,
+      "footnote": ""
+    },
+    {
+      "indicator": {
+        "id": "EG.ELC.ACCS.ZS",
+        "value": "Access to electricity (% of population)"
+      },
+      "country": {
+        "id": "NG",
+        "value": "Nigeria"
+      },
+      "countryiso3code": "NGA",
+      "date": "2014",
+      "value": 54.2,
+      "unit": "",
+      "obs_status": "",
+      "decimal": 1,
+      "footnote": ""
+    },
+    {
+      "indicator": {
+        "id": "EG.ELC.ACCS.ZS",
+        "value": "Access to electricity (% of population)"
+      },
+      "country": {
+        "id": "NG",
+        "value": "Nigeria"
+      },
+      "countryiso3code": "NGA",
+      "date": "2013",
+      "value": 55.6,
+      "unit": "",
+      "obs_status": "",
+      "decimal": 1,
+      "footnote": ""
+    },
+    {
+      "indicator": {
+        "id": "EG.ELC.ACCS.ZS",
+        "value": "Access to electricity (% of population)"
+      },
+      "country": {
+        "id": "NG",
+        "value": "Nigeria"
+      },
+      "countryiso3code": "NGA",
+      "date": "2012",
+      "value": 53,
+      "unit": "",
+      "obs_status": "",
+      "decimal": 1,
+      "footnote": ""
+    },
+    {
+      "indicator": {
+        "id": "EG.ELC.ACCS.ZS",
+        "value": "Access to electricity (% of population)"
+      },
+      "country": {
+        "id": "NG",
+        "value": "Nigeria"
+      },
+      "countryiso3code": "NGA",
+      "date": "2011",
+      "value": 55.9,
+      "unit": "",
+      "obs_status": "",
+      "decimal": 1,
+      "footnote": ""
+    },
+    {
+      "indicator": {
+        "id": "EG.ELC.ACCS.ZS",
+        "value": "Access to electricity (% of population)"
+      },
+      "country": {
+        "id": "NG",
+        "value": "Nigeria"
+      },
+      "countryiso3code": "NGA",
+      "date": "2010",
+      "value": 48,
+      "unit": "",
+      "obs_status": "",
+      "decimal": 1,
+      "footnote": ""
+    },
+    {
+      "indicator": {
+        "id": "EG.ELC.ACCS.ZS",
+        "value": "Access to electricity (% of population)"
+      },
+      "country": {
+        "id": "NG",
+        "value": "Nigeria"
+      },
+      "countryiso3code": "NGA",
+      "date": "2009",
+      "value": 50,
+      "unit": "",
+      "obs_status": "",
+      "decimal": 1,
+      "footnote": ""
+    },
+    {
+      "indicator": {
+        "id": "EG.ELC.ACCS.ZS",
+        "value": "Access to electricity (% of population)"
+      },
+      "country": {
+        "id": "NG",
+        "value": "Nigeria"
+      },
+      "countryiso3code": "NGA",
+      "date": "2008",
+      "value": 50.3,
+      "unit": "",
+      "obs_status": "",
+      "decimal": 1,
+      "footnote": ""
+    },
+    {
+      "indicator": {
+        "id": "EG.ELC.ACCS.ZS",
+        "value": "Access to electricity (% of population)"
+      },
+      "country": {
+        "id": "NG",
+        "value": "Nigeria"
+      },
+      "countryiso3code": "NGA",
+      "date": "2007",
+      "value": 50.1,
+      "unit": "",
+      "obs_status": "",
+      "decimal": 1,
+      "footnote": ""
+    },
+    {
+      "indicator": {
+        "id": "EG.ELC.ACCS.ZS",
+        "value": "Access to electricity (% of population)"
+      },
+      "country": {
+        "id": "NG",
+        "value": "Nigeria"
+      },
+      "countryiso3code": "NGA",
+      "date": "2006",
+      "value": 47.6,
+      "unit": "",
+      "obs_status": "",
+      "decimal": 1,
+      "footnote": ""
+    },
+    {
+      "indicator": {
+        "id": "EG.ELC.ACCS.ZS",
+        "value": "Access to electricity (% of population)"
+      },
+      "country": {
+        "id": "NG",
+        "value": "Nigeria"
+      },
+      "countryiso3code": "NGA",
+      "date": "2005",
+      "value": 46.8,
+      "unit": "",
+      "obs_status": "",
+      "decimal": 1,
+      "footnote": ""
+    },
+    {
+      "indicator": {
+        "id": "EG.ELC.ACCS.ZS",
+        "value": "Access to electricity (% of population)"
+      },
+      "country": {
+        "id": "NG",
+        "value": "Nigeria"
+      },
+      "countryiso3code": "NGA",
+      "date": "2004",
+      "value": 46.1,
+      "unit": "",
+      "obs_status": "",
+      "decimal": 1,
+      "footnote": ""
+    },
+    {
+      "indicator": {
+        "id": "EG.ELC.ACCS.ZS",
+        "value": "Access to electricity (% of population)"
+      },
+      "country": {
+        "id": "NG",
+        "value": "Nigeria"
+      },
+      "countryiso3code": "NGA",
+      "date": "2003",
+      "value": 52.2,
+      "unit": "",
+      "obs_status": "",
+      "decimal": 1,
+      "footnote": ""
+    },
+    {
+      "indicator": {
+        "id": "EG.ELC.ACCS.ZS",
+        "value": "Access to electricity (% of population)"
+      },
+      "country": {
+        "id": "NG",
+        "value": "Nigeria"
+      },
+      "countryiso3code": "NGA",
+      "date": "2002",
+      "value": 44.6,
+      "unit": "",
+      "obs_status": "",
+      "decimal": 1,
+      "footnote": ""
+    },
+    {
+      "indicator": {
+        "id": "EG.ELC.ACCS.ZS",
+        "value": "Access to electricity (% of population)"
+      },
+      "country": {
+        "id": "NG",
+        "value": "Nigeria"
+      },
+      "countryiso3code": "NGA",
+      "date": "2001",
+      "value": 43.9,
+      "unit": "",
+      "obs_status": "",
+      "decimal": 1,
+      "footnote": ""
+    },
+    {
+      "indicator": {
+        "id": "EG.ELC.ACCS.ZS",
+        "value": "Access to electricity (% of population)"
+      },
+      "country": {
+        "id": "NG",
+        "value": "Nigeria"
+      },
+      "countryiso3code": "NGA",
+      "date": "2000",
+      "value": 43.2,
+      "unit": "",
+      "obs_status": "",
+      "decimal": 1,
+      "footnote": ""
+    },
+    {
+      "indicator": {
+        "id": "EG.ELC.ACCS.ZS",
+        "value": "Access to electricity (% of population)"
+      },
+      "country": {
+        "id": "NG",
+        "value": "Nigeria"
+      },
+      "countryiso3code": "NGA",
+      "date": "2020",
+      "value": 99.9,
+      "unit": "",
+      "obs_status": "",
+      "decimal": 1,
+      "footnote": ""
+    }
+  ]
+]

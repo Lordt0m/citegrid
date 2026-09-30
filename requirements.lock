@@ -1,0 +1,8 @@
+# Pinned dependency lockfile for CiteGrid (generated with pip freeze)
+asgiref==3.12.1
+dj-database-url==3.1.2
+Django==5.2.17
+psycopg==3.3.6
+psycopg-binary==3.3.6
+sqlparse==0.6.0
+tzdata==2026.4

@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}CiteGrid — About the data{% endblock %}
+
+{% block content %}
+<div class="container hero-container about-page">
+  <div class="hero-header">
+    <div class="snapshot-stamp">
+      <span class="stamp-label">Active Snapshot:</span>
+      {% if latest_snapshot %}
+        <span class="stamp-value font-mono">Snapshot v{{ latest_snapshot.version }} ({{ latest_snapshot.content_hash|slice:":8" }})</span>
+        {% if snapshot_is_simulation %}<span class="badge badge-sim">Simulated example</span>{% endif %}
+      {% else %}
+        <span class="stamp-value font-mono">No data imported yet</span>
+      {% endif %}
+    </div>
+    <h1 class="hero-title">About the Evidence</h1>
+    <p class="hero-lead">
+      See where the figures come from, how snapshots are kept, and what a gap in the data means.
+    </p>
+  </div>
+
+  <div class="overview-grid" style="margin-bottom: var(--space-8);">
+    <!-- Left Column: Scope & Principles -->
+    <div class="surface-card">
+      <h2 class="card-title">Fixed Evidence Scope</h2>
+      <p class="card-desc">
+        CiteGrid is a focused evidence ledger designed to make development data citations reproducible. It is strictly bounded to three countries and three indicators across annual historical records from 2000 to the present.
+      </p>
+
+      <div class="scope-columns">
+        <div class="scope-col">
+          <div class="col-heading">Countries (3)</div>
+          <ul class="scope-list">
+            <li class="scope-item"><span class="badge">NGA</span> Nigeria</li>
+            <li class="scope-item"><span class="badge">GHA</span> Ghana</li>
+            <li class="scope-item"><span class="badge">KEN</span> Kenya</li>
+          </ul>
+        </div>
+        <div class="scope-col">
+          <div class="col-heading">Indicators (3)</div>
+          <ul class="scope-list">
+            <li class="scope-item"><span class="badge badge-indicator">Total</span> EG.ELC.ACCS.ZS</li>
+            <li class="scope-item"><span class="badge badge-indicator">Rural</span> EG.ELC.ACCS.RU.ZS</li>
+            <li class="scope-item"><span class="badge badge-indicator">Urban</span> EG.ELC.ACCS.UR.ZS</li>
+          </ul>
+        </div>
+      </div>
+
+      <div style="margin-top: var(--space-6); border-top: 1px solid var(--color-border-subtle); padding-top: var(--space-5);">
+        <h3 style="font-size: 16px; font-weight: 600; margin-bottom: var(--space-2);">Missing-Value Policy</h3>
+        <p class="card-desc" style="margin-bottom: 0;">
+          Historical data frequently contains gaps. When a provider supplies no figure for an observation year, CiteGrid records and renders the value as <strong>“No data”</strong>. Missing values are never imputed, never substituted with zero (0.0%), and never connected across gaps with artificial line segments.
+        </p>
+      </div>
+    </div>
+
+    <!-- Right Column: Stored Provenance & Data Invariants -->
+    <div class="surface-card">
+      <h2 class="card-title">Attribution & Provenance</h2>
+
+      {% if provenance %}
+        <div class="provenance-note" style="margin-bottom: var(--space-4);">
+          <div class="prov-title">Active snapshot v{{ provenance.version }}</div>
+          <div class="prov-body">
+            <strong>Data Provider:</strong> {{ provenance.provider_label }}<br>
+            <strong>Underlying Source:</strong> {{ provenance.underlying_source }}<br>
+            <strong>License:</strong> {{ provenance.license }}<br>
+            <strong>Content Hash:</strong> <span class="font-mono provenance-hash">{{ provenance.content_hash }}</span><br>
+            <strong>Retrieved by CiteGrid on:</strong> {{ provenance.retrieved_at|date:"Y-m-d H:i" }} UTC
+          </div>
+        </div>
+      {% else %}
+        <div class="provenance-note" style="margin-bottom: var(--space-4);">
+          <div class="prov-title">Source Authority</div>
+          <div class="prov-body">
+            Data is retrieved from the World Bank World Development Indicators (Source 2) API under open data provider terms. Each complete release is stored per immutable snapshot.
+          </div>
+        </div>
+      {% endif %}
+
+      <div style="margin-top: var(--space-5);">
+        <h3 style="font-size: 16px; font-weight: 600; margin-bottom: var(--space-2);">Retrieval Date vs. Observation Year</h3>
+        <p class="card-desc" style="margin-bottom: var(--space-4);">
+          An <em>observation year</em> describes the historical calendar year the metric represents. The <em>retrieval timestamp</em> describes the exact point in time when CiteGrid fetched and validated the complete dataset from the provider.
+        </p>
+      </div>
+
+      <div style="margin-top: var(--space-4);">
+        <h3 style="font-size: 16px; font-weight: 600; margin-bottom: var(--space-2);">Content-Addressed Immutability</h3>
+        <p class="card-desc" style="margin-bottom: 0;">
+          Every published snapshot receives a canonical SHA-256 content hash computed over normalized observation records. Published snapshots and their values are strictly immutable.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Durable Import Run Audit Log -->
+  <section class="surface-card" style="margin-bottom: var(--space-10); padding: var(--space-6);" aria-labelledby="import-history-heading">
+    <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-3);">
+      <h2 id="import-history-heading" class="card-title" style="margin: 0;">
+        Durable Import Run History
+      </h2>
+      <span style="font-size: var(--text-xs); color: var(--color-ink-muted);">
+        Audit log of data retrieval and validation runs
+      </span>
+    </div>
+
+    <p class="card-desc" style="margin-bottom: var(--space-4); font-size: var(--text-sm);">
+      Every data retrieval attempt is recorded durably. A failed run rolls back the database publication transaction, leaving earlier published snapshots completely untouched, while preserving the audit record below.
+    </p>
+
+    {% if has_simulated_runs %}
+      <div class="status-banner status-banner--simulated" style="margin-bottom: var(--space-4); padding: var(--space-3) var(--space-4);">
+        <span class="badge badge-sim">Simulated runs detected</span>
+        <div class="banner-text" style="font-size: var(--text-xs);">
+          Runs labelled <span class="badge badge-sim" style="font-size: 10px;">Simulated</span> represent test fixture replays executed in demo or test environments, not live World Bank network events.
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="import-history-wrap">
+      <table class="data-table import-history-table" style="width: 100%; border-collapse: collapse; text-align: left;">
+        <thead>
+          <tr style="border-bottom: 2px solid var(--color-border); background: #faf9f6;">
+            <th scope="col" style="padding: var(--space-2) var(--space-3);">Started (UTC)</th>
+            <th scope="col" style="padding: var(--space-2) var(--space-3);">Duration</th>
+            <th scope="col" style="padding: var(--space-2) var(--space-3);">Status</th>
+            <th scope="col" style="padding: var(--space-2) var(--space-3);">Target Snapshot</th>
+            <th scope="col" style="padding: var(--space-2) var(--space-3);">Scope / Records</th>
+            <th scope="col" style="padding: var(--space-2) var(--space-3);">Summary</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in import_runs %}
+            <tr style="border-bottom: 1px solid var(--color-border);">
+              <td data-label="Started (UTC)" style="padding: var(--space-2) var(--space-3); font-family: var(--font-mono);">
+                {{ item.run.started_at|date:"Y-m-d H:i:s" }}
+              </td>
+              <td data-label="Duration" style="padding: var(--space-2) var(--space-3); font-family: var(--font-mono);">
+                {% if item.duration_sec is not None %}{{ item.duration_sec }}s{% else %}&mdash;{% endif %}
+              </td>
+              <td data-label="Status" style="padding: var(--space-2) var(--space-3);">
+                {% if item.run.status == 'COMPLETED' %}
+                  <span class="badge badge-completed">Completed</span>
+                {% elif item.run.status == 'FAILED' %}
+                  <span class="badge badge-failed">Failed</span>
+                {% elif item.run.status == 'STARTED' %}
+                  <span class="badge badge-neutral">Started</span>
+                {% else %}
+                  <span class="badge badge-neutral">{{ item.run.status }}</span>
+                {% endif %}
+                {% if item.is_simulation %}
+                  <span class="badge badge-sim" style="font-size: 10px;">Simulated</span>
+                {% endif %}
+              </td>
+              <td data-label="Target snapshot" style="padding: var(--space-2) var(--space-3); font-family: var(--font-mono);">
+                {% if item.run.snapshot %}
+                  Snapshot v{{ item.run.snapshot.version }} ({{ item.run.snapshot.content_hash|slice:":8" }})
+                {% else %}
+                  <span style="color: var(--color-ink-muted);">&mdash;</span>
+                {% endif %}
+              </td>
+              <td data-label="Scope / records" style="padding: var(--space-2) var(--space-3); font-family: var(--font-mono);">
+                {% if item.run.records_count %}
+                  {{ item.run.records_count }} recs ({{ item.run.pages_fetched }} pgs)
+                {% else %}
+                  {{ item.run.pages_fetched }} pgs
+                {% endif %}
+              </td>
+              <td data-label="Summary" style="padding: var(--space-2) var(--space-3); max-width: 320px;">
+                {{ item.summary }}
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="6" style="padding: var(--space-6); text-align: center; color: var(--color-ink-muted);">
+                No import runs recorded yet.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</div>
+{% endblock %}

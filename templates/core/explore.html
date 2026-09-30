@@ -1,0 +1,427 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}CiteGrid — Explore {{ ctx.indicator_name }}{% endblock %}
+
+{% block content %}
+<div class="container explore-container">
+
+  <!-- Header & Snapshot Stamp -->
+  <header class="explore-hero-header">
+    <div class="snapshot-stamp">
+      <span class="stamp-label">Active Snapshot:</span>
+      <span class="stamp-value font-mono">Snapshot v{{ ctx.version }} ({{ ctx.content_hash|slice:":8" }})</span>
+      {% if snapshot_is_simulation %}<span class="badge badge-sim">Simulated example</span>{% endif %}
+      <span class="stamp-date">Retrieved {{ ctx.retrieved_at|date:"Y-m-d H:i" }} UTC</span>
+      <span class="stamp-count">&bull; with {{ ctx.snapshot.values.count }} observation values</span>
+    </div>
+
+    <h1 class="hero-title">Know which figure you’re citing.</h1>
+    <p class="hero-lead">
+      Compare electricity access across Nigeria, Ghana, and Kenya with immutable data snapshots and visible revision tracking.
+    </p>
+
+    <!-- Revision Alert Banner -->
+    {% if ctx.has_revisions %}
+      <div class="status-banner status-banner--revision" role="region" aria-label="Revisions notification">
+        <span class="status-indicator-dot status-indicator-dot--alert"></span>
+        <div class="banner-text">
+          <strong>Changes since previous complete snapshot:</strong>
+          {{ ctx.revision_count }} revision{{ ctx.revision_count|pluralize }} recorded.
+          <a href="{% url 'core:revisions_list' %}" class="banner-link">Review changes &rarr;</a>
+        </div>
+      </div>
+    {% elif ctx.version == 1 %}
+      <div class="status-banner status-banner--neutral" role="region" aria-label="Snapshot status">
+        <span class="status-indicator-dot"></span>
+        <div class="banner-text">
+          Initial complete published snapshot. No earlier snapshot exists to compare.
+        </div>
+      </div>
+    {% else %}
+      <div class="status-banner status-banner--neutral" role="region" aria-label="Snapshot status">
+        <span class="status-indicator-dot"></span>
+        <div class="banner-text">
+          No changes observed between stored snapshots.
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Warning & Notification Messages -->
+    {% if ctx.warning_notification %}
+      <div class="alert-box alert-box--warning" role="alert">
+        <strong>Notice:</strong> {{ ctx.warning_notification }}
+      </div>
+    {% endif %}
+
+    {% for note in ctx.notifications %}
+      <div class="alert-box alert-box--info" role="status">
+        {{ note }}
+      </div>
+    {% endfor %}
+  </header>
+
+  <!-- Filter & Controls Toolbar (Standard GET Form for No-JS Compliance) -->
+  <details class="toolbar-section" aria-label="Data controls">
+    <summary class="toolbar-summary">
+      <span class="toolbar-summary-label">Refine comparison</span>
+      <span class="toolbar-summary-current">{{ ctx.indicator_short_label }} access · {{ ctx.selected_countries|length }} countr{{ ctx.selected_countries|length|pluralize:"y,ies" }} · {{ ctx.start_year }}–{{ ctx.end_year }}</span>
+    </summary>
+    <form method="GET" action="{% url 'core:index' %}" id="explore-filter-form" class="toolbar-form">
+      <input type="hidden" name="filter_submitted" value="1">
+      <input type="hidden" name="year" id="hidden-year-input" value="{{ ctx.selected_year }}">
+      <input type="hidden" name="view" id="hidden-view-input" value="{{ ctx.view_mode }}">
+
+      <!-- Indicator Selector -->
+      <fieldset class="control-group indicator-group">
+        <legend class="control-legend">Indicator</legend>
+        <div class="segmented-control">
+          {% for code, label in ctx.available_indicators %}
+            <label class="segmented-option {% if ctx.indicator_code == code %}selected{% endif %}">
+              <input type="radio" name="indicator" value="{{ code }}" {% if ctx.indicator_code == code %}checked{% endif %} class="control-radio">
+              <span class="option-label">{{ label }}</span>
+            </label>
+          {% endfor %}
+        </div>
+      </fieldset>
+
+      <!-- Country Selection Checkboxes -->
+      <fieldset class="control-group country-group">
+        <legend class="control-legend">Countries</legend>
+        <div class="country-toggles">
+          {% for code, name in ctx.available_countries %}
+            <label class="country-toggle {% if code in ctx.selected_countries %}selected{% endif %} series-{{ code|lower }}">
+              <input type="checkbox" name="countries" value="{{ code }}" {% if code in ctx.selected_countries %}checked{% endif %} class="control-checkbox">
+              <span class="toggle-marker marker-{{ code|lower }}"></span>
+              <span class="toggle-name">{{ name }}</span>
+            </label>
+          {% endfor %}
+        </div>
+      </fieldset>
+
+      <!-- Year Range Inputs -->
+      <fieldset class="control-group range-group">
+        <legend class="control-legend">Year Scope</legend>
+        <div class="range-inputs">
+          <label class="range-label">
+            <span class="range-text">From</span>
+            <input type="number" name="start_year" value="{{ ctx.start_year }}" min="{{ ctx.scope_start_year }}" max="{{ ctx.scope_end_year }}" class="range-input font-mono">
+          </label>
+          <span class="range-sep">&ndash;</span>
+          <label class="range-label">
+            <span class="range-text">To</span>
+            <input type="number" name="end_year" value="{{ ctx.end_year }}" min="{{ ctx.scope_start_year }}" max="{{ ctx.scope_end_year }}" class="range-input font-mono">
+          </label>
+          <a href="?indicator={{ ctx.indicator_code }}{% for c in ctx.selected_countries %}&countries={{ c }}{% endfor %}&view={{ ctx.view_mode }}" class="reset-link" title="Reset to full snapshot scope">Reset range</a>
+        </div>
+      </fieldset>
+
+      <!-- Submit Action (Always Available) -->
+      <div class="control-group submit-group">
+        <button type="submit" class="button button--secondary" id="apply-filters-btn">Apply filters</button>
+      </div>
+    </form>
+  </details>
+
+  <!-- View Mode Switcher -->
+  <div class="view-mode-bar">
+    <div class="view-mode-tabs" role="tablist" aria-label="Visualization mode">
+      <a href="?indicator={{ ctx.indicator_code }}{% for c in ctx.selected_countries %}&countries={{ c }}{% endfor %}&start_year={{ ctx.start_year }}&end_year={{ ctx.end_year }}&year={{ ctx.selected_year }}&view=chart"
+         class="view-tab {% if ctx.view_mode == 'chart' %}active{% endif %}" role="tab" aria-selected="{% if ctx.view_mode == 'chart' %}true{% else %}false{% endif %}">
+        View as chart
+      </a>
+      <a href="?indicator={{ ctx.indicator_code }}{% for c in ctx.selected_countries %}&countries={{ c }}{% endfor %}&start_year={{ ctx.start_year }}&end_year={{ ctx.end_year }}&year={{ ctx.selected_year }}&view=table"
+         class="view-tab {% if ctx.view_mode == 'table' %}active{% endif %}" role="tab" aria-selected="{% if ctx.view_mode == 'table' %}true{% else %}false{% endif %}">
+        View as table
+      </a>
+    </div>
+
+    <div class="utility-actions">
+      <a href="{% url 'core:public_example' %}" class="utility-link">Open example briefing &rarr;</a>
+    </div>
+  </div>
+
+  <!-- Main Evidence Workspace Grid (8 cols chart + 4 cols year lens) -->
+  <div class="workspace-grid {% if ctx.view_mode == 'table' %}view-mode-table-active{% endif %}">
+
+    <!-- Column 1: Accessible SVG Comparison Chart -->
+    <section class="workspace-chart-column" aria-label="Comparison chart">
+      <figure class="chart-figure" role="img" aria-labelledby="chart-title chart-desc">
+        <div class="chart-header">
+          <h2 id="chart-title" class="chart-title">{{ ctx.indicator_name }}</h2>
+          <p id="chart-desc" class="chart-caption">
+            Annual electricity access across {% for c in ctx.selected_countries %}{{ c }}{% if not forloop.last %}, {% endif %}{% endfor %} ({{ ctx.start_year }}&ndash;{{ ctx.end_year }}).
+            Missing observations are shown as breaks in the series line.
+          </p>
+        </div>
+
+        <div class="svg-container">
+          <svg viewBox="0 0 800 400" preserveAspectRatio="xMidYMid meet" class="explore-svg" id="explore-svg-root" aria-hidden="true">
+            <!-- Grid Lines and Y Axis Labels -->
+            <g class="grid-layer">
+              {% for pct, y_pos in ctx.chart_y_ticks %}
+                <line x1="60" y1="{{ y_pos }}" x2="710" y2="{{ y_pos }}" class="grid-line" />
+                <text x="52" y="{{ y_pos|add:'4' }}" class="axis-label font-mono text-right">{{ pct }}%</text>
+              {% endfor %}
+            </g>
+
+            <!-- X Axis Years -->
+            <g class="axis-layer">
+              {% for yr, x_pos in ctx.chart_years %}
+                <line x1="{{ x_pos }}" y1="40" x2="{{ x_pos }}" y2="350" class="year-grid-line" />
+                <text x="{{ x_pos }}" y="372" class="axis-label font-mono text-center">{{ yr }}</text>
+              {% endfor %}
+              <!-- Bottom axis baseline -->
+              <line x1="60" y1="350" x2="710" y2="350" class="axis-baseline" />
+            </g>
+
+            <!-- Crosshair Line for Selected Year -->
+            {% if ctx.crosshair_x %}
+              <line x1="{{ ctx.crosshair_x }}" y1="40" x2="{{ ctx.crosshair_x }}" y2="350" id="chart-crosshair" class="chart-crosshair-line" />
+            {% endif %}
+
+            <!-- Series Lines & Points -->
+            {% for series in ctx.chart_series_list %}
+              <g class="series-group {{ series.css_class }}" data-country="{{ series.country_code }}">
+                <!-- Discontinuous Segments (No lines across gaps) -->
+                {% for segment in series.segments %}
+                  <path d="{{ segment.path_d }}" fill="none" stroke="{{ segment.color }}" stroke-dasharray="{{ segment.stroke_dash }}" stroke-width="2.5" class="series-path {{ segment.css_class }}" />
+                {% endfor %}
+
+                <!-- Interactive, Focusable Point Hit Targets -->
+                {% for pt in series.points %}
+                  {% if not pt.is_missing %}
+                    <g tabindex="0" role="button" class="chart-point-target"
+                       data-year="{{ pt.year }}"
+                       data-country="{{ pt.country_code }}"
+                       data-value="{{ pt.formatted_value }}"
+                       aria-label="{{ pt.country_name }} {{ pt.year }}: {{ pt.formatted_value }}">
+                      {% if pt.marker_type == 'circle' %}
+                        <circle cx="{{ pt.x }}" cy="{{ pt.y }}" r="4" fill="{{ series.color }}" class="point-mark point-mark-circle" />
+                      {% elif pt.marker_type == 'diamond' %}
+                        <polygon points="{{ pt.x }},{{ pt.y|add:'-4.5' }} {{ pt.x|add:'4.5' }},{{ pt.y }} {{ pt.x }},{{ pt.y|add:'4.5' }} {{ pt.x|add:'-4.5' }},{{ pt.y }}" fill="{{ series.color }}" class="point-mark point-mark-diamond" />
+                      {% elif pt.marker_type == 'square' %}
+                        <rect x="{{ pt.x|add:'-3.5' }}" y="{{ pt.y|add:'-3.5' }}" width="7" height="7" fill="{{ series.color }}" class="point-mark point-mark-square" />
+                      {% endif %}
+                      <!-- Invisible larger hit area for comfortable touch targets -->
+                      <circle cx="{{ pt.x }}" cy="{{ pt.y }}" r="14" fill="transparent" class="point-hit-shield" />
+                    </g>
+                  {% endif %}
+                {% endfor %}
+
+                <!-- Direct End Label (Hidden on small viewports via CSS) -->
+                {% if series.end_label_x and series.end_label_y %}
+                  <text x="{{ series.end_label_x }}" y="{{ series.end_label_y }}" fill="{{ series.color }}" class="series-end-label font-mono">
+                    {{ series.country_name }}
+                  </text>
+                {% endif %}
+              </g>
+            {% endfor %}
+          </svg>
+        </div>
+
+        <!-- Compact Series Legend (Specifically for Viewports <= 640px) -->
+        <div class="chart-legend-compact" aria-label="Country series legend">
+          {% for series in ctx.chart_series_list %}
+            <div class="legend-item series-{{ series.country_code|lower }}">
+              <span class="legend-swatch marker-{{ series.country_code|lower }}"></span>
+              <span class="legend-name">{{ series.country_name }}</span>
+              {% if series.latest_observation_year %}
+                <span class="legend-latest font-mono">({{ series.latest_observation_year }}: {{ series.latest_formatted_value }})</span>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      </figure>
+    </section>
+
+    <!-- Column 2: Raised Year Lens Inspector Surface -->
+    <aside class="workspace-lens-column" aria-label="Observation year lens">
+      <div class="surface-card year-lens-card" aria-live="polite" id="year-lens-surface">
+        <div class="lens-header">
+          <span class="lens-tag">Observation Year</span>
+          <div class="lens-year-row">
+            <h2 class="lens-year-heading font-mono" id="lens-year-display">{{ ctx.year_lens.selected_year }}</h2>
+            <div class="lens-nav-buttons">
+              <!-- Previous Year Link (GET preserving all query parameters) -->
+              {% if ctx.year_lens.prev_year %}
+                <a href="?indicator={{ ctx.indicator_code }}{% for c in ctx.selected_countries %}&countries={{ c }}{% endfor %}&start_year={{ ctx.start_year }}&end_year={{ ctx.end_year }}&year={{ ctx.year_lens.prev_year }}&view={{ ctx.view_mode }}"
+                   class="lens-nav-btn font-mono" id="lens-prev-btn" aria-label="Previous year: {{ ctx.year_lens.prev_year }}">&larr; {{ ctx.year_lens.prev_year }}</a>
+              {% else %}
+                <span class="lens-nav-btn font-mono disabled" aria-disabled="true">&larr;</span>
+              {% endif %}
+
+              <!-- Next Year Link (GET preserving all query parameters) -->
+              {% if ctx.year_lens.next_year %}
+                <a href="?indicator={{ ctx.indicator_code }}{% for c in ctx.selected_countries %}&countries={{ c }}{% endfor %}&start_year={{ ctx.start_year }}&end_year={{ ctx.end_year }}&year={{ ctx.year_lens.next_year }}&view={{ ctx.view_mode }}"
+                   class="lens-nav-btn font-mono" id="lens-next-btn" aria-label="Next year: {{ ctx.year_lens.next_year }}">{{ ctx.year_lens.next_year }} &rarr;</a>
+              {% else %}
+                <span class="lens-nav-btn font-mono disabled" aria-disabled="true">&rarr;</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Year Values by Country -->
+        <div class="lens-country-list" id="lens-country-values">
+          {% for item in ctx.year_lens.country_items %}
+            <div class="lens-country-row {{ item.css_class }}" data-country="{{ item.country_code }}">
+              <div class="lens-country-meta">
+                <span class="country-swatch marker-{{ item.country_code|lower }}"></span>
+                <span class="country-name">{{ item.country_name }}</span>
+              </div>
+              <div class="lens-country-data">
+                <div class="lens-value font-mono {% if item.is_missing %}missing-val{% endif %}">
+                  {{ item.formatted_value }}
+                </div>
+                {% if item.is_latest %}
+                  <span class="badge badge-latest" title="Latest available year in the entire snapshot">Latest available</span>
+                {% elif item.snapshot_latest_year %}
+                  <span class="lens-subtext font-mono">Latest: {{ item.snapshot_latest_year }}</span>
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+
+        <!-- Year Scrubbing Slider (Progressively Enhanced) -->
+        <div class="lens-slider-wrapper">
+          <label for="year-range-slider" class="slider-label">Scrub observation year</label>
+          <input type="range" id="year-range-slider"
+                 min="{{ ctx.start_year }}" max="{{ ctx.end_year }}"
+                 value="{{ ctx.selected_year }}" step="1"
+                 class="year-slider" aria-label="Scrub observation year">
+        </div>
+
+        <!-- Native Direct Year Selector (No-JS Fallback Form) -->
+        <form method="GET" action="{% url 'core:index' %}" class="year-select-form noscript-only">
+          <input type="hidden" name="filter_submitted" value="1">
+          <input type="hidden" name="indicator" value="{{ ctx.indicator_code }}">
+          {% for c in ctx.selected_countries %}
+            <input type="hidden" name="countries" value="{{ c }}">
+          {% endfor %}
+          <input type="hidden" name="start_year" value="{{ ctx.start_year }}">
+          <input type="hidden" name="end_year" value="{{ ctx.end_year }}">
+          <input type="hidden" name="view" value="{{ ctx.view_mode }}">
+
+          <label for="noscript-year-select" class="control-legend">Select year:</label>
+          <div style="display: flex; gap: var(--space-2); margin-top: 4px;">
+            <select name="year" id="noscript-year-select" class="range-input font-mono">
+              {% for yr in ctx.year_lens.all_range_years %}
+                <option value="{{ yr }}" {% if yr == ctx.selected_year %}selected{% endif %}>{{ yr }}</option>
+              {% endfor %}
+            </select>
+            <button type="submit" class="button button--secondary">Go</button>
+          </div>
+        </form>
+
+        <!-- Lens Attribution Stamp -->
+        <div class="lens-source-stamp">
+          <div class="stamp-heading">Unit of Measurement</div>
+          <div class="stamp-body">{{ ctx.unit }}</div>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- Semantic Data Table Section -->
+  <section class="explore-table-section {% if ctx.view_mode == 'table' %}view-active{% endif %}" id="table-view" aria-label="Evidence Data Table">
+    <div class="table-card surface-card">
+      <div class="table-header-bar">
+        <div>
+          <h2 class="table-heading">{{ ctx.indicator_name }}</h2>
+          <p class="table-caption">
+            Observation values from {{ ctx.start_year }} to {{ ctx.end_year }}. Select a year link to pin the year lens.
+          </p>
+        </div>
+      </div>
+
+      <div class="table-responsive-wrapper">
+        <table class="citegrid-table" id="explore-data-table">
+          <caption>Comparative electricity access figures per observation year</caption>
+          <thead>
+            <tr>
+              <th scope="col" class="font-mono">Observation Year</th>
+              {% for code, name in ctx.table_columns %}
+                <th scope="col" class="text-right">
+                  <span class="table-th-swatch marker-{{ code|lower }}"></span>
+                  {{ name }} ({{ code }})
+                </th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in ctx.table_rows %}
+              <tr class="table-row {% if row.is_selected %}row-selected{% endif %}" id="table-row-{{ row.year }}" data-year="{{ row.year }}">
+                <th scope="row" class="font-mono table-year-cell">
+                  <!-- Semantic keyboard-focusable year link (one clear keyboard stop per row) -->
+                  <a href="?indicator={{ ctx.indicator_code }}{% for c in ctx.selected_countries %}&countries={{ c }}{% endfor %}&start_year={{ ctx.start_year }}&end_year={{ ctx.end_year }}&year={{ row.year }}&view={{ ctx.view_mode }}"
+                     class="year-pin-link font-mono"
+                     data-year="{{ row.year }}"
+                     aria-label="Select observation year {{ row.year }}">
+                    {{ row.year }}
+                  </a>
+                </th>
+                {% for cell in row.cells %}
+                  <td class="text-right font-mono table-val-cell" data-label="{{ cell.country_name }}">
+                    {% if cell.is_missing %}
+                      <span class="missing-badge" aria-label="No data">No data</span>
+                    {% else %}
+                      <span class="cell-val">{{ cell.formatted_value }}</span>
+                    {% endif %}
+                  </td>
+                {% endfor %}
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stored Provenance & Source Trail Section ("What am I seeing?") -->
+  <section class="source-trail-section" aria-label="Data provenance and attribution">
+    <div class="surface-card source-card">
+      <h2 class="card-title">What am I seeing?</h2>
+      <p class="source-definition">{{ ctx.indicator_definition }}</p>
+
+      <div class="source-meta-grid">
+        <div class="meta-item">
+          <span class="meta-label">Indicator Code</span>
+          <span class="meta-value font-mono">{{ ctx.indicator_code }}</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Data Provider</span>
+          <span class="meta-value">{{ ctx.provider_label }}</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Underlying Source</span>
+          <span class="meta-value">{{ ctx.underlying_source }}</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">License</span>
+          <span class="meta-value">{{ ctx.license }}</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Official Series Page</span>
+          <span class="meta-value">
+            <a href="{{ ctx.source_url }}" target="_blank" rel="noopener noreferrer" class="source-link">
+              View on worldbank.org &nearr;
+            </a>
+          </span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Snapshot Version</span>
+          <span class="meta-value font-mono">Snapshot v{{ ctx.version }} ({{ ctx.content_hash }})</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- Data Script for Progressive Enhancement -->
+{{ ctx.year_lens.all_range_years|json_script:"all-range-years" }}
+<script src="{% static 'js/explore.js' %}" defer></script>
+{% endblock %}

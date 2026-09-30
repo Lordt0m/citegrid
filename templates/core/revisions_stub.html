@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}CiteGrid — Revisions{% endblock %}
+
+{% block content %}
+<div class="container hero-container">
+  <div class="hero-header">
+    <div class="snapshot-stamp">
+      <span class="stamp-label">Active Snapshot:</span>
+      {% if latest_snapshot %}
+        <span class="stamp-value font-mono">Snapshot v{{ latest_snapshot.version }} ({{ latest_snapshot.content_hash|slice:":8" }})</span>
+      {% else %}
+        <span class="stamp-value font-mono">No data imported yet</span>
+      {% endif %}
+    </div>
+    <h1 class="hero-title">Revision Ledger</h1>
+    <p class="hero-lead">
+      Audit changes, newly supplied observations, and data withdrawals between complete, immutable World Bank data releases.
+    </p>
+  </div>
+
+  <div class="surface-card" style="max-width: 800px; margin-bottom: var(--space-8);">
+    {% if not latest_snapshot %}
+      <h2 class="card-title">No data imported yet</h2>
+      <p class="card-desc">
+        A complete import must be run and published before snapshot comparisons and revision tracking are available.
+      </p>
+    {% elif latest_snapshot.version == 1 %}
+      <div class="status-banner" style="background: rgba(22, 28, 36, 0.04); border-color: var(--color-border); color: var(--color-ink);">
+        <span class="status-indicator-dot" style="background-color: var(--color-secondary);"></span>
+        <div>
+          <strong>Initial complete publication:</strong> There is no earlier snapshot to compare.
+        </div>
+      </div>
+      <p class="card-desc">
+        Snapshot v{{ latest_snapshot.version }} is the baseline publication for CiteGrid. When subsequent complete imports detect revisions in World Bank historical series (newly supplied values, revised numbers, or withdrawn data points), each change will be tracked here side-by-side with old and new values, snapshot IDs, and CiteGrid retrieval dates.
+      </p>
+    {% elif revision_count == 0 %}
+      <div class="status-banner" style="background: rgba(22, 28, 36, 0.04); border-color: var(--color-border); color: var(--color-ink);">
+        <span class="status-indicator-dot" style="background-color: var(--color-success);"></span>
+        <div>
+          <strong>No revisions observed:</strong> All observations match the previous snapshot.
+        </div>
+      </div>
+      <p class="card-desc">
+        No changes were found between Snapshot v{{ latest_snapshot.version }} and its predecessor across the nine country–indicator series.
+      </p>
+    {% else %}
+      <div class="status-banner" style="background: #eff6ff; border-color: #bfdbfe; color: #1e40af;">
+        <span class="status-indicator-dot" style="background-color: #2563eb;"></span>
+        <div>
+          <strong>Changes since previous complete snapshot:</strong> {{ revision_count }} revision{{ revision_count|pluralize }} recorded.
+        </div>
+      </div>
+      <p class="card-desc">
+        CiteGrid detected and recorded {{ revision_count }} audit transition{{ revision_count|pluralize }} between Snapshot v{{ latest_snapshot.version }} and the preceding published snapshot.
+      </p>
+    {% endif %}
+
+    <div class="provenance-note" style="margin-top: var(--space-6);">
+      <div class="prov-title">Interactive Audit Ledger Status</div>
+      <div class="prov-body">
+        The interactive revision drilldown, before-and-after chart inspection, and transition filtering (New value, Changed, Withdrawn) are scheduled in milestone <strong>Ticket 7: Revisions and briefing interface</strong>.
+      </div>
+    </div>
+
+    <div style="margin-top: var(--space-6); display: flex; gap: var(--space-3);">
+      <a href="{% url 'core:index' %}" class="button button--primary" style="text-decoration: none;">&larr; Return to Explore</a>
+      <a href="{% url 'core:public_example' %}" class="button button--secondary" style="text-decoration: none;">View pinned example briefing</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

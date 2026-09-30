@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}CiteGrid — Inspect Revision: {{ inspection.revision.country_name }} {{ inspection.revision.observation_year }}{% endblock %}
+
+{% block content %}
+<div class="container hero-container" style="max-width: 800px;">
+
+  <div style="margin-bottom: var(--space-4);">
+    <a href="{% url 'core:revisions_list' %}" class="btn-back" style="font-size: var(--text-sm); text-decoration: none; color: var(--color-ink);">
+      &larr; Back to Revisions Ledger
+    </a>
+  </div>
+
+  <div class="hero-header">
+    <div class="badge-row" style="margin-bottom: var(--space-2);">
+      {% if inspection.revision.transition_type == 'CHANGED' %}
+        <span class="badge badge-changed">Changed</span>
+      {% elif inspection.revision.transition_type == 'NEW_VALUE' %}
+        <span class="badge badge-new">New value</span>
+      {% elif inspection.revision.transition_type == 'WITHDRAWN' %}
+        <span class="badge badge-withdrawn">Withdrawn</span>
+      {% endif %}
+      <span class="badge badge-neutral font-mono">{{ inspection.delta_str }}</span>
+      {% if inspection.is_simulation %}
+        <span class="badge badge-sim">Simulated example</span>
+      {% endif %}
+    </div>
+
+    <h1 class="hero-title" style="font-size: var(--text-2xl);">
+      {{ inspection.revision.country_name }} &bull; {{ inspection.revision.indicator_name }}
+    </h1>
+    <p class="hero-lead">
+      Observation year: <strong class="font-mono">{{ inspection.revision.observation_year }}</strong> &bull;
+      Observed by CiteGrid on {{ inspection.revision.current_retrieved_at|date:"Y-m-d H:i" }} UTC
+    </p>
+
+    {% if inspection.is_simulation %}
+      <div class="status-banner status-banner--simulated" role="region" aria-label="Simulation notice" style="margin-top: var(--space-3);">
+        <span class="badge badge-sim">Simulated example</span>
+        <div class="banner-text">
+          CiteGrid observed a difference between these retrieved snapshots. This record displays simulated test fixture replay data.
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Before / After Side-by-Side Cards -->
+  <div class="diff-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--space-4); margin: var(--space-6) 0;">
+    <!-- Earlier Snapshot -->
+    <div class="diff-card diff-card--old surface-card" style="padding: var(--space-5);">
+      <div style="font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-ink-muted); margin-bottom: var(--space-1);">
+        Earlier Snapshot: v{{ inspection.revision.previous_snapshot.version }} ({{ inspection.revision.previous_snapshot.content_hash|slice:":8" }})
+      </div>
+      <div style="font-size: var(--text-3xl); font-weight: 700; font-family: var(--font-mono); margin-bottom: var(--space-3);">
+        {% if inspection.revision.old_value is not None %}
+          {{ inspection.revision.old_value|floatformat:2 }}%
+        {% else %}
+          <span class="val-missing">No data</span>
+        {% endif %}
+      </div>
+      <div style="font-size: var(--text-xs); color: var(--color-ink-muted); line-height: 1.6;">
+        <div><strong>Retrieved:</strong> {{ inspection.revision.previous_retrieved_at|date:"Y-m-d H:i" }} UTC</div>
+        {% if inspection.revision.old_raw_value_str %}
+          <div><strong>Raw string:</strong> <code class="font-mono">{{ inspection.revision.old_raw_value_str }}</code></div>
+        {% endif %}
+        {% if inspection.revision.old_footnote %}
+          <div><strong>Footnote:</strong> {{ inspection.revision.old_footnote }}</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Later Snapshot -->
+    <div class="diff-card diff-card--new surface-card" style="padding: var(--space-5);">
+      <div style="font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-ink-muted); margin-bottom: var(--space-1);">
+        Later Snapshot: v{{ inspection.revision.current_snapshot.version }} ({{ inspection.revision.current_snapshot.content_hash|slice:":8" }})
+      </div>
+      <div style="font-size: var(--text-3xl); font-weight: 700; font-family: var(--font-mono); margin-bottom: var(--space-3);">
+        {% if inspection.revision.new_value is not None %}
+          {{ inspection.revision.new_value|floatformat:2 }}%
+        {% else %}
+          <span class="val-missing">No data</span>
+        {% endif %}
+      </div>
+      <div style="font-size: var(--text-xs); color: var(--color-ink-muted); line-height: 1.6;">
+        <div><strong>Retrieved:</strong> {{ inspection.revision.current_retrieved_at|date:"Y-m-d H:i" }} UTC</div>
+        {% if inspection.revision.new_raw_value_str %}
+          <div><strong>Raw string:</strong> <code class="font-mono">{{ inspection.revision.new_raw_value_str }}</code></div>
+        {% endif %}
+        {% if inspection.revision.new_footnote %}
+          <div><strong>Footnote:</strong> {{ inspection.revision.new_footnote }}</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Objective Explanation -->
+  <div class="surface-card" style="padding: var(--space-4) var(--space-5); margin-bottom: var(--space-6); background: #f8f7f4; border-left: 3px solid var(--color-ink);">
+    <h3 style="font-size: var(--text-sm); font-weight: 700; margin-top: 0; margin-bottom: var(--space-2);">What Changed?</h3>
+    <p style="font-size: var(--text-sm); line-height: 1.5; margin: 0;">
+      {{ inspection.explanation }}
+    </p>
+    <div style="font-size: var(--text-xs); color: var(--color-ink-muted); margin-top: var(--space-3); border-top: 1px solid var(--color-border); padding-top: var(--space-2);">
+      <strong>Distinction:</strong> Observation year {{ inspection.revision.observation_year }} refers to the historical calendar year measured by the provider. Observed by CiteGrid on {{ inspection.revision.current_retrieved_at|date:"Y-m-d H:i" }} UTC is when CiteGrid captured this revision.
+    </div>
+  </div>
+
+  <!-- Contextual Neighbours Table -->
+  <section class="surface-card" style="margin-bottom: var(--space-6); padding: var(--space-5);">
+    <h3 class="card-title" style="font-size: var(--text-base); margin-bottom: var(--space-3);">
+      Neighbouring Observation Years in Both Snapshots
+    </h3>
+    <table class="data-table" style="width: 100%; border-collapse: collapse; font-size: var(--text-sm);">
+      <thead>
+        <tr style="border-bottom: 2px solid var(--color-border);">
+          <th scope="col" style="padding: var(--space-2); text-align: left;">Observation Year</th>
+          <th scope="col" style="padding: var(--space-2); text-align: right;">Snapshot v{{ inspection.revision.previous_snapshot.version }}</th>
+          <th scope="col" style="padding: var(--space-2); text-align: right;">Snapshot v{{ inspection.revision.current_snapshot.version }}</th>
+          <th scope="col" style="padding: var(--space-2); text-align: right;">Difference</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for nr in inspection.neighbour_rows %}
+          <tr style="border-bottom: 1px solid var(--color-border); {% if nr.is_target_year %}background: rgba(0,0,0,0.03); font-weight: 700;{% endif %}">
+            <td style="padding: var(--space-2);">
+              <span class="font-mono">{{ nr.year }}</span>
+              {% if nr.is_target_year %}<span class="badge badge-neutral" style="font-size: 10px; margin-left: 0.25rem;">Revised</span>{% endif %}
+            </td>
+            <td style="padding: var(--space-2); text-align: right;" class="font-mono">
+              {% if nr.old_value is not None %}{{ nr.old_value|floatformat:2 }}%{% else %}<span class="val-missing">No data</span>{% endif %}
+            </td>
+            <td style="padding: var(--space-2); text-align: right;" class="font-mono">
+              {% if nr.new_value is not None %}{{ nr.new_value|floatformat:2 }}%{% else %}<span class="val-missing">No data</span>{% endif %}
+            </td>
+            <td style="padding: var(--space-2); text-align: right;" class="font-mono">
+              {% if nr.old_value is not None and nr.new_value is not None %}
+                {% if nr.old_value == nr.new_value %}
+                  <span style="color: var(--color-ink-muted);">0.00</span>
+                {% else %}
+                  <strong>{{ nr.new_value|floatformat:2 }}</strong>
+                {% endif %}
+              {% elif nr.old_value is None and nr.new_value is not None %}
+                <span style="color: #2e7d32;">+New</span>
+              {% elif nr.old_value is not None and nr.new_value is None %}
+                <span style="color: #c62828;">-Withdrawn</span>
+              {% else %}
+                <span style="color: var(--color-ink-muted);">&mdash;</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Authoritative Stored Provenance -->
+  <section class="surface-card" style="margin-bottom: var(--space-8); padding: var(--space-5);">
+    <h3 class="card-title" style="font-size: var(--text-base); margin-bottom: var(--space-3);">Authoritative Stored Provenance</h3>
+    <div class="prov-body" style="font-size: var(--text-sm); line-height: 1.6;">
+      <p><strong>Indicator Code:</strong> <span class="font-mono">{{ inspection.revision.indicator_code }}</span> &bull; <strong>Unit:</strong> {{ inspection.revision.new_unit|default:inspection.revision.old_unit }}</p>
+      <p><strong>Definition:</strong> {{ inspection.revision.new_indicator_definition|default:inspection.revision.old_indicator_definition }}</p>
+      <p><strong>Provider:</strong> {{ inspection.revision.new_provider_label|default:inspection.revision.old_provider_label }} &bull; <strong>Underlying Dataset:</strong> {{ inspection.revision.new_underlying_source|default:inspection.revision.old_underlying_source }}</p>
+      <p><strong>Licence:</strong> {{ inspection.revision.new_license|default:inspection.revision.old_license }} &bull; <strong>Source URL:</strong> <a href="{{ inspection.revision.new_source_url|default:inspection.revision.old_source_url }}" target="_blank" rel="noopener noreferrer">{{ inspection.revision.new_source_url|default:inspection.revision.old_source_url }}</a></p>
+    </div>
+  </section>
+
+</div>
+{% endblock %}

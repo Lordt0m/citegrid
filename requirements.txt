@@ -1,0 +1,2 @@
+# CiteGrid Locked Dependencies (Django 5.2 LTS)
+-r requirements.lock
