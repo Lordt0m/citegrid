@@ -26,6 +26,11 @@ SECRET_KEY = os.environ.get('SECRET_KEY', INSECURE_DEV_SECRET)
 
 DEBUG = os.environ.get('DEBUG', 'True').lower() in ('true', '1', 'yes')
 
+# The hosting platform terminates HTTPS and redirects HTTP requests at its edge.
+# Secure cookies remain required for the public site even without Django redirects.
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+
 if not DEBUG:
     if not SECRET_KEY or SECRET_KEY == INSECURE_DEV_SECRET or SECRET_KEY.startswith('django-insecure-'):
         raise ImproperlyConfigured(

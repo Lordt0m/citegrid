@@ -254,3 +254,39 @@ python manage.py check_provider_smoke
 - `static/js/`: Progressive enhancement scripts (`explore.js`, `revisions.js`, `replay.js`).
 - `templates/`: Semantic, accessible HTML templates (`base.html`, `core/explore.html`, `core/explore_empty.html`, `core/comparison_detail.html`, `core/revisions.html`, `core/revision_detail.html`, `core/about.html`, `core/replay.html`).
 The public demo is read-only. It includes a pinned example comparison and a clearly labelled simulated replay; analyst sign-in is outside this version's scope.
+
+## PythonAnywhere Beginner deployment
+
+The free `LordTom.pythonanywhere.com` web app uses Python 3.13 and Manual Configuration. In a PythonAnywhere Bash console, run:
+
+```bash
+git clone https://github.com/Lordt0m/citegrid.git
+cd citegrid
+bash setup_pythonanywhere.sh
+```
+
+The setup script creates a private virtual environment and `.env` file, installs the locked dependencies, prepares a dedicated SQLite demo database with clearly labelled simulated data, and collects static files. It preserves an existing `.env` on subsequent runs. Never commit `.env` or the demo database.
+
+In the PythonAnywhere **Web** tab for `LordTom.pythonanywhere.com`:
+
+1. Set **Source code** and **Working directory** to `/home/LordTom/citegrid`.
+2. Set **Virtualenv** to `/home/LordTom/.virtualenvs/citegrid`.
+3. Replace the contents of `/var/www/lordtom_pythonanywhere_com_wsgi.py` with:
+
+   ```python
+   import os
+   import sys
+
+   project_path = '/home/LordTom/citegrid'
+   if project_path not in sys.path:
+       sys.path.insert(0, project_path)
+
+   os.environ['DJANGO_SETTINGS_MODULE'] = 'citegrid.settings'
+   from django.core.wsgi import get_wsgi_application
+   application = get_wsgi_application()
+   ```
+
+4. Add a **Static files** mapping from `/static/` to `/home/LordTom/citegrid/staticfiles`.
+5. Enable **Force HTTPS**, then click **Reload**. Check the home page, example briefing, replay, and `/healthz/`.
+
+PythonAnywhere's Beginner plan requires a monthly visit to the Web tab to extend the free web app. Its HTTPS redirect is configured at the hosting edge; Django's `SECURE_SSL_REDIRECT` remains off to avoid a duplicate proxy redirect.
